@@ -1,0 +1,127 @@
+{
+	"patcher" : 	{
+		"fileversion" : 1,
+		"appversion" : 		{
+			"major" : 8,
+			"minor" : 3,
+			"revision" : 3,
+			"architecture" : "x64",
+			"modernui" : 1
+		}
+,
+		"classnamespace" : "dsp.gen",
+		"rect" : [ 45.0, 87.0, 600.0, 450.0 ],
+		"bglocked" : 0,
+		"openinpresentation" : 0,
+		"default_fontsize" : 12.0,
+		"default_fontface" : 0,
+		"default_fontname" : "Arial",
+		"gridonopen" : 1,
+		"gridsize" : [ 15.0, 15.0 ],
+		"gridsnaponopen" : 1,
+		"objectsnaponopen" : 1,
+		"statusbarvisible" : 2,
+		"toolbarvisible" : 1,
+		"lefttoolbarpinned" : 0,
+		"toptoolbarpinned" : 0,
+		"righttoolbarpinned" : 0,
+		"bottomtoolbarpinned" : 0,
+		"toolbars_unpinned_last_save" : 0,
+		"tallnewobj" : 0,
+		"boxanimatetime" : 200,
+		"enablehscroll" : 1,
+		"enablevscroll" : 1,
+		"devicewidth" : 0.0,
+		"description" : "",
+		"digest" : "",
+		"tags" : "",
+		"style" : "",
+		"subpatcher_template" : "",
+		"assistshowspatchername" : 0,
+		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-8",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 860.0, 574.663333373069804, 35.0, 22.0 ],
+					"text" : "out 2"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"code" : "hann(count, size) {\r\n\t\r\n\tphz = count/size; //scaled between 0 and 1\r\n\tphz *= TWOPI;\r\n\t\r\n\treturn 0.5 - 0.5 * cos(phz);\r\n}\r\n\r\npan(sprd, trig) {\r\n\t\t\r\n\t\tn = latch(noise(), trig);\r\n\t\tn *= 0.5;\r\n\t\tn *= sprd;\r\n\t\tn+= 0.5;\r\n\t\t\r\n\t\tl = sqrt(1 - n);\r\n\t\tr = sqrt(n);\r\n\t\t\r\n\t\treturn l, r;\r\n\t\r\n\t}\r\n\r\nmake_grain(voice, count, buf, size, position, pitch, spread, spray, stereo_spread){\r\n\r\n\r\n\ttrig = delta(count == voice) == 1; // will trigger when c = 1\r\n\r\n\tcount = min(counter(1, trig), latch(size, trig)); //latch is opened when trig is triggered\r\n \t\r\n\tpos = latch(position + (noise() * spray) ,trig);\r\n \tpos *= dim(buf);\r\n\tsprd = noise() * spread;\r\n\tsprd = pow(2, sprd);\r\n\ti = pos + (count * latch(pitch * sprd, trig));\r\n\r\n\tamp = hann(count, latch(size, trig));\r\n\tsmp = peek(buf, i, boundmode=\"wrap\", interp=\"cubic\");\r\n\r\n\tgrain = amp * smp;\r\n\t\r\n\tpan_left, pan_right = pan(stereo_spread, trig);\r\n\t\r\n\tgrain_left = grain * pan_left;\r\n\tgrain_right = grain * pan_right;\r\n\t\r\n\treturn grain_left, grain_right;\r\n\r\n}\r\n\r\n\r\n\r\n\r\nBuffer sample(\"sample\");\r\n\r\nParam density(20, min = 0, max = 100);\r\n\r\nParam grain_size(100,min = 2, max = 500);\r\n\r\nParam pitch(0, min = -100, max = 100);\r\n\r\nParam position(0, min = 0, max = 1);\r\n\r\nParam spread(0, min = 0, max = 1);\r\n\r\nParam spray(0, min = 0, max = 1);\r\n\r\nParam stereo_spread(1, min = 0, max = 1);\r\n\r\nvoices = 30; //number of voices\r\n\r\nsize = mstosamps(grain_size);\r\n\r\np = delta(phasor(density)) < 0; // difference of phasor with the frequency of the denisty\r\npch = pow(2, pitch/12); //pitch if 12 will be an octave up and 0 will be original\r\n\r\nc = counter(p, in1, voices); // starts from 0 and goes to 30\r\n\r\nout_left = 0;\r\nout_right= 0;\r\n\r\n\r\n\r\n\r\n// 30 voices\r\n\r\nl, r = make_grain(0, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(1, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(2, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(3, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(4, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(5, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(6, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(7, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(8, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(9, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(10, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(11, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(12, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(13, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(14, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(15, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(16, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(17, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(18, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(19, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(20, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(21, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(22, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(23, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(24, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(25, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(26, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(27, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(28, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nl, r = make_grain(29, c, sample, size, position, pch, spread, spray, stereo_spread);\r\nout_left += l;\r\nout_right += r;\r\n\r\nout1, out2 = out_left, out_right;",
+					"fontface" : 0,
+					"fontname" : "<Monospaced>",
+					"fontsize" : 12.0,
+					"id" : "obj-7",
+					"maxclass" : "codebox",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "" ],
+					"patching_rect" : [ 50.0, 10.0, 829.0, 534.0 ]
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-6",
+					"linecount" : 19,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 1079.0, 10.0, 155.0, 261.0 ],
+					"text" : "Parameters include:\ndensity (0-100Hz)\n\ngrain size, total length of the envelope of each grain (2ms -500ms)\n\ngrain pitch(-100 to 100st)\n\nposition of sample (0-1)\n\nspread is pitch varients for each grain (0-1)\n\nspray (0-1) position started varient for each grain\n\nstereo spread / panning (0-1)"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-1",
+					"maxclass" : "newobj",
+					"numinlets" : 0,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 50.0, 14.0, 28.0, 22.0 ],
+					"text" : "in 1"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-4",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 50.0, 560.0, 35.0, 22.0 ],
+					"text" : "out 1"
+				}
+
+			}
+ ],
+		"lines" : [ 			{
+				"patchline" : 				{
+					"destination" : [ "obj-7", 0 ],
+					"source" : [ "obj-1", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-4", 0 ],
+					"source" : [ "obj-7", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-8", 0 ],
+					"source" : [ "obj-7", 1 ]
+				}
+
+			}
+ ]
+	}
+
+}
